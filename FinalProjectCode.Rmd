@@ -1,0 +1,717 @@
+---
+title: "FinalProjectCode"
+output:
+  pdf_document: default
+  html_document: default
+date: "2023-11-28"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#Packages 
+```{r}
+library(dplyr)
+library(marked)
+library(survival)
+library(MASS)
+library(RMark)
+library(lubridate)
+library(tidyverse)
+library(ggfortify)
+library(survminer)
+```
+
+#Load Data
+```{r}
+cetacean <- read.csv("allCetaceanData.csv")
+```
+
+#Data Cleaning
+```{r}
+cetacean <- cetacean %>%
+  mutate(statusDate = if_else(is.na(statusDate), "2017-07-01", statusDate))
+
+cetacean$time <- as.numeric(difftime(cetacean$statusDate, cetacean$originDate, units = "days") / 365)
+cetacean$age <- round(cetacean$time, digits = 0)
+
+cetacean$species <- gsub("Beluga Whale", "Beluga", cetacean$species)
+
+cetacean$species <- ifelse(grepl("Pilot", cetacean$species), "Pilot Whale", cetacean$species)
+
+cetacean$species <- gsub("hybrid", "Backcross", cetacean$species)
+
+cetacean$species <- gsub("Pseudorca", "False Killer Whale", cetacean$species)
+
+cetacean$species <- gsub("River, Amazon", "Amazon River; Boto", cetacean$species)
+
+cetacean$species <- gsub("Atlantic White- Sided", "Atlantic White- Sided", cetacean$species)
+
+cetacean <- cetacean %>%
+  mutate(
+    delta = ifelse(status == "Died", 1, 0)
+  )
+
+cetacean <- cetacean %>%
+  mutate(dw = case_when(
+    species %in% c(
+      "Amazon River; Boto",
+      "Atlantic Spotted",
+      "Atlantic White- Sided",
+      "Bottlenose",
+      "Commerson's",
+      "Common",
+      "Common, Long-beak",
+      "Common; Saddleback",
+      "False Killer Whale",
+      "Pacific White-Sided",
+      "Pantropical Spotted",
+      "Pseudorca",
+      "Pygmy Killer Whale",
+      "Risso's",
+      "River, Amazon",
+      "Rough-Toothed",
+      "Spinner",
+      "Spotted, Atlantic",
+      "Spotted, Pantropical",
+      "Tucuxi",
+      "White-Beaked",
+      "White-sided, Pacific"
+    ) ~ "dolphin",
+    species %in% c(
+      "Beluga",
+      "Beluga Whale",
+      "Killer Whale; Orca",
+      "Long-Finned Pilot Whale",
+      "Melon-Headed Whale",
+      "Northern Right Whale",
+      "Pilot, Short-fin",
+      "Pilot, Short-finned",
+      "Short-Finned Pilot Whale",
+      "Pilot Whale"
+    ) ~ "whale",
+    TRUE ~ NA_character_
+  ))
+```
+
+## Make 2 dfs
+```{r}
+whales <- cetacean[cetacean$dw %in% c("whale"), ]
+dolphins <- cetacean[cetacean$dw %in% c("dolphin"), ]
+```
+
+##Alive or dead for each year for whales
+```{r}
+whales$`1961` <- ifelse(whales$originDate <= "1961-12-31" & (whales$statusDate >= "1961-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1962` <- ifelse(whales$originDate <= "1962-12-31" & (whales$statusDate >= "1962-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1963` <- ifelse(whales$originDate <= "1963-12-31" & (whales$statusDate >= "1963-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1964` <- ifelse(whales$originDate <= "1964-12-31" & (whales$statusDate >= "1964-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1965` <- ifelse(whales$originDate <= "1965-12-31" & (whales$statusDate >= "1965-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1966` <- ifelse(whales$originDate <= "1966-12-31" & (whales$statusDate >= "1966-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1967` <- ifelse(whales$originDate <= "1967-12-31" & (whales$statusDate >= "1967-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1968` <- ifelse(whales$originDate <= "1968-12-31" & (whales$statusDate >= "1968-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1969` <- ifelse(whales$originDate <= "1969-12-31" & (whales$statusDate >= "1969-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1970` <- ifelse(whales$originDate <= "1970-12-31" & (whales$statusDate >= "1970-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1971` <- ifelse(whales$originDate <= "1971-12-31" & (whales$statusDate >= "1971-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1972` <- ifelse(whales$originDate <= "1972-12-31" & (whales$statusDate >= "1972-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1973` <- ifelse(whales$originDate <= "1973-12-31" & (whales$statusDate >= "1973-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1974` <- ifelse(whales$originDate <= "1974-12-31" & (whales$statusDate >= "1974-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1975` <- ifelse(whales$originDate <= "1975-12-31" & (whales$statusDate >= "1975-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1976` <- ifelse(whales$originDate <= "1976-12-31" & (whales$statusDate >= "1976-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1977` <- ifelse(whales$originDate <= "1977-12-31" & (whales$statusDate >= "1977-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1978` <- ifelse(whales$originDate <= "1978-12-31" & (whales$statusDate >= "1978-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1979` <- ifelse(whales$originDate <= "1979-12-31" & (whales$statusDate >= "1979-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1980` <- ifelse(whales$originDate <= "1980-12-31" & (whales$statusDate >= "1980-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1981` <- ifelse(whales$originDate <= "1981-12-31" & (whales$statusDate >= "1981-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1982` <- ifelse(whales$originDate <= "1982-12-31" & (whales$statusDate >= "1982-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1983` <- ifelse(whales$originDate <= "1983-12-31" & (whales$statusDate >= "1983-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1984` <- ifelse(whales$originDate <= "1984-12-31" & (whales$statusDate >= "1984-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1985` <- ifelse(whales$originDate <= "1985-12-31" & (whales$statusDate >= "1985-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1986` <- ifelse(whales$originDate <= "1986-12-31" & (whales$statusDate >= "1986-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1987` <- ifelse(whales$originDate <= "1987-12-31" & (whales$statusDate >= "1987-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1988` <- ifelse(whales$originDate <= "1988-12-31" & (whales$statusDate >= "1988-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1989` <- ifelse(whales$originDate <= "1989-12-31" & (whales$statusDate >= "1989-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1990` <- ifelse(whales$originDate <= "1990-12-31" & (whales$statusDate >= "1990-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1991` <- ifelse(whales$originDate <= "1991-12-31" & (whales$statusDate >= "1991-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1992` <- ifelse(whales$originDate <= "1992-12-31" & (whales$statusDate >= "1992-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1993` <- ifelse(whales$originDate <= "1993-12-31" & (whales$statusDate >= "1993-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1994` <- ifelse(whales$originDate <= "1994-12-31" & (whales$statusDate >= "1994-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1995` <- ifelse(whales$originDate <= "1995-12-31" & (whales$statusDate >= "1995-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1996` <- ifelse(whales$originDate <= "1996-12-31" & (whales$statusDate >= "1996-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1997` <- ifelse(whales$originDate <= "1997-12-31" & (whales$statusDate >= "1997-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1998` <- ifelse(whales$originDate <= "1998-12-31" & (whales$statusDate >= "1998-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`1999` <- ifelse(whales$originDate <= "1999-12-31" & (whales$statusDate >= "1999-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2000` <- ifelse(whales$originDate <= "2000-12-31" & (whales$statusDate >= "2000-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2001` <- ifelse(whales$originDate <= "2001-12-31" & (whales$statusDate >= "2001-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2002` <- ifelse(whales$originDate <= "2002-12-31" & (whales$statusDate >= "2002-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2003` <- ifelse(whales$originDate <= "2003-12-31" & (whales$statusDate >= "2003-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2004` <- ifelse(whales$originDate <= "2004-12-31" & (whales$statusDate >= "2004-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2005` <- ifelse(whales$originDate <= "2005-12-31" & (whales$statusDate >= "2005-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2006` <- ifelse(whales$originDate <= "2006-12-31" & (whales$statusDate >= "2006-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2007` <- ifelse(whales$originDate <= "2007-12-31" & (whales$statusDate >= "2007-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2008` <- ifelse(whales$originDate <= "2008-12-31" & (whales$statusDate >= "2008-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2009` <- ifelse(whales$originDate <= "2009-12-31" & (whales$statusDate >= "2009-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2010` <- ifelse(whales$originDate <= "2010-12-31" & (whales$statusDate >= "2010-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2011` <- ifelse(whales$originDate <= "2011-12-31" & (whales$statusDate >= "2011-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2012` <- ifelse(whales$originDate <= "2012-12-31" & (whales$statusDate >= "2012-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2013` <- ifelse(whales$originDate <= "2013-12-31" & (whales$statusDate >= "2013-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2014` <- ifelse(whales$originDate <= "2014-12-31" & (whales$statusDate >= "2014-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2015` <- ifelse(whales$originDate <= "2015-12-31" & (whales$statusDate >= "2015-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2016` <- ifelse(whales$originDate <= "2016-12-31" & (whales$statusDate >= "2016-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+```{r}
+whales$`2017` <- ifelse(whales$originDate <= "2017-12-31" & (whales$statusDate >= "2017-01-01" | is.na(whales$statusDate)), 1, 0)
+```
+
+##ch column
+```{r}
+whales <- whales[complete.cases(whales$`1965`), ]
+whales$ch <- paste(whales$`1961`, whales$`1962`, whales$`1963`, whales$`1964`, whales$`1965`, whales$`1966`,whales$`1967`,whales$`1968`,whales$`1969`,whales$`1970`,whales$`1971`,whales$`1972`,whales$`1973`,whales$`1974`,whales$`1975`,whales$`1976`,whales$`1977`,whales$`1978`,whales$`1979`,whales$`1980`,whales$`1981`,whales$`1982`,whales$`1983`,whales$`1984`,whales$`1985`,whales$`1986`,whales$`1987`,whales$`1988`,whales$`1989`,whales$`1990`,whales$`1991`,whales$`1992`,whales$`1993`,whales$`1994`,whales$`1995`,whales$`1996`,whales$`1997`,whales$`1998`,whales$`1999`,whales$`2000`,whales$`2001`,whales$`2002`,whales$`2003`,whales$`2004`,whales$`2005`,whales$`2006`,whales$`2007`,whales$`2008`,whales$`2009`,whales$`2010`,whales$`2011`,whales$`2012`,whales$`2013`,whales$`2014`,whales$`2015`,whales$`2016`,whales$`2017`,sep = "")
+```
+
+##df for cjs model
+```{r}
+dfwhales <- whales[, c("ch", "sex")]
+dfwhales$sex<-as.factor(dfwhales$sex)
+```
+
+#CJS Model
+```{r}
+cjs.m1 <- crm(dfwhales)
+```
+##refit
+```{r}
+cjs.m1 <- cjs.hessian(cjs.m1)
+cjs.m1
+```
+###Phi estimate
+```{r}
+plogis(cjs.m1$results$beta$Phi)
+```
+
+
+0.9545072
+
+#factor factors
+```{r}
+whales$sex<-as.factor(whales$sex)
+whales$species<-as.factor(whales$species)
+whales$acquisition<-as.factor(whales$acquisition)
+whales$originLocation<-as.factor(whales$originLocation)
+whales$currently<-as.factor(whales$currently)
+whales$region<-as.factor(whales$region)
+```
+
+#modeling
+```{r}
+whale.fit<-coxph(Surv(age,delta)~1,data=whales)
+whale.fit.full<-coxph(Surv(age,delta)~species+sex+acquisition+currently,data=whales)
+whale.fit.full <- stepAIC(whale.fit.full, direction= "backward")
+anova(whale.fit,whale.fit.full)
+```
+
+```{r}
+summary(whale.fit.full)
+```
+
+```{r}
+whale.fit.full<-coxph(Surv(age,delta)~species+sex+acquisition,data=whales)
+```
+
+
+```{r}
+whale.fit.full$var
+whale.fit.full$coefficients
+beta<-whale.fit.full$coefficients
+submatrix<-whale.fit.full$var
+
+#test statistic
+t(beta) %*% ginv(submatrix) %*% beta
+
+1-pchisq(0.0001190078,df=10)
+```
+
+
+#Survival Model
+```{r}
+whale.fit.full<-survfit(Surv(age,delta)~species+sex+acquisition,data=whales)
+summary(whale.fit.full)
+```
+
+#Survival Curve
+```{r}
+plot(whale.fit.full, col = rainbow(length(whale.fit.full$strata)),
+     main = "Survival Curve",
+     xlab = "Time", ylab = "Survival Probability")
+```
+
+#Survival Band
+```{r}
+whale.fit<-survfit(Surv(age,delta)~1,data=whales)
+plot(whale.fit, col = "blue", main = "Survival Curve with Confidence Bands",
+     xlab = "Time", ylab = "Survival Probability")
+
+# Add legend
+legend("topright", legend = "95% CI", col = "blue", lty = 1)
+autoplot(whale.fit, surv.linetype = 'dashed', conf.int = FALSE,
+         censor.shape = '*', censor.size = 5, facets = TRUE, surv.colour = 'blue', censor.colour = 'red')
+```
+
+#Pval for wild vs zoo
+```{r}
+survival_rate_group1 <- 0.975
+sample_size_group1 <- 362
+
+survival_rate_group2 <- 0.935
+sample_size_group2 <- 181
+
+events_group1 <- round(survival_rate_group1 * sample_size_group1)
+events_group2 <- round(survival_rate_group2 * sample_size_group2)
+
+data_matrix <- matrix(c(events_group1, sample_size_group1 - events_group1,
+                        events_group2, sample_size_group2 - events_group2),
+                      nrow = 2, byrow = TRUE)
+
+chi2_result <- chisq.test(data_matrix)
+
+chi2_result
+```
+
+#surv diff
+```{r}
+whale.fit.final.diff<-survdiff(Surv(age,delta)~species+sex+acquisition,data=whales)
+whale.fit.final.diff
+```
+
+#sex model
+
+```{r}
+whale.fit.sex<-coxph(Surv(age,delta)~sex,data=whales)
+whale.fit<-coxph(Surv(age,delta)~1,data=whales)
+summary(whale.fit.sex)
+anova(whale.fit,whale.fit.sex)
+```
+
+```{r}
+whale.fit.sex$var
+whale.fit.sex$coefficients
+beta<-whale.fit.sex$coefficients
+submatrix<-whale.fit.sex$var
+
+#test statistic
+t(beta) %*% ginv(submatrix) %*% beta
+
+1-pchisq(8.416974,df=2)
+```
+
+```{r}
+whale.fit.sex<-survfit(Surv(age,delta)~sex,data=whales)
+summary(whale.fit.sex)
+```
+
+
+```{r}
+ggsurvplot(
+  whale.fit.sex,
+  data = whales,
+  size = 0.5,
+  censor.shape = '*',
+  censor.size = 5,
+  palette = c("#6DD3CE", "#C8E9A0", "#EB9486"),
+  censor.col = 'red',  
+  conf.int = TRUE,
+  pval = FALSE,
+  risk.table = TRUE,
+  risk.table.col = "strata",
+  legend.labs = c("Female", "Male", "Unknown"),
+  risk.table.height = 0.40,
+  ggtheme = theme_minimal()
+)
+```
+
+
+#age class model
+```{r}
+whales <- whales %>%
+  mutate(age_class = ifelse(time < 2, "Class1", "Class2"))
+
+```
+
+```{r}
+whales$age_class <- as.factor(whales$age_class)
+whales$sex<-as.factor(whales$sex)
+surv_obj <- with(whales, Surv(age, delta))
+cox_model <- coxph(surv_obj ~ age_class + strata(age_class)+sex, data = whales)
+summary(cox_model)
+x<-survfit(cox_model)
+summary(x)
+```
+
+#time dependednt model
+```{r}
+whale_1 <- subset(whales, time >= 2)
+surv_obj <- with(whale_1, Surv(age, delta))
+
+cox_model <- coxph(surv_obj ~ age + sex + tt(age), data = whale_1)
+summary(cox_model)
+```
+
+#What specices has the best survival
+```{r}
+whale.fit.species<-coxph(Surv(age,delta)~species,data=whales)
+summary(whale.fit.species)
+```
+
+```{r}
+whale.fit.species$var
+whale.fit.species$coefficients
+beta<-whale.fit.species$coefficients
+submatrix<-whale.fit.species$var
+
+#test statistic
+t(beta) %*% ginv(submatrix) %*% beta
+
+1-pchisq(49.42983,df=4)
+```
+0.0000000004749346
+pval<$\alpha$
+
+```{r}
+whale.fit<-coxph(Surv(age,delta)~1,data=whales)
+anova(whale.fit,whale.fit.species)
+
+```
+6.396e-08
+pval<$\alpha$
+
+```{r}
+whale.fit.species<-survfit(Surv(age,delta)~species,data=whales)
+summary(whale.fit.species)
+```
+
+```{r}
+ggsurvplot(
+  whale.fit.species,
+  data = whales,
+  size = 0.5,
+  censor.shape = '*',
+  censor.size = 5,
+  palette = c("#6DD3CE", "#C8E9A0", "#EB9486", "#A13D63", "#351E29"),
+  censor.col = 'red',  
+  conf.int = FALSE,
+  pval = FALSE,
+  risk.table = TRUE,
+  risk.table.col = "strata",
+  legend.labs = c("Beluga", "Orca", "Melon-Head", "Northern Right", "Pilot"),
+  risk.table.height = 0.40,
+  ggtheme = theme_minimal()
+)
+
+```
+
+```{r}
+survdiff(Surv(age, delta) ~ species, data=whales)
+```
+```{r}
+whales <- subset(whales, !grepl('U', sex, ignore.case = TRUE))
+whale.fit.2<-survfit(Surv(age,delta)~species+sex,data=whales)
+summary(whale.fit.2)
+```
+
+```{r}
+ggsurvplot(
+  whale.fit.2,
+  data = whales,
+  size = 0.5,
+  censor.shape = '*',
+  censor.size = 5,
+  #palette = c("#6DD3CE", "#C8E9A0", "#EB9486", "#A13D63", "#351E29"),
+  censor.col = 'red',  
+  conf.int = FALSE,
+  pval = FALSE,
+  risk.table = TRUE,
+  risk.table.col = "strata",
+  legend.labs = c("F-Beluga","M-Beluga", "F-Orca","M-Orca", "F-Melon-Head", "F-Northern Right","M-Northern Right", "F-Pilot", "M-Pilot"),
+  risk.table.height = 0.45,
+  ggtheme = theme_minimal()
+)
+
+```
+```{r}
+whale.fit.stratified <- survfit(Surv(age, delta) ~ species + strata(sex), data=whales)
+summary(whale.fit.stratified)
+```
+
+```{r}
+whale.fit.coxph<- coxph(Surv(age, delta) ~ species*sex, data=whales)
+whale.fit.coxph
+```
+```{r}
+summary(whale.fit.coxph)
+```
+
+```{r}
+whale.fit.coxph<- coxph(Surv(age, delta) ~ species+sex, data=whales)
+whale.fit.coxph$var
+whale.fit.coxph$coefficients
+beta<-whale.fit.coxph$coefficients
+submatrix<-whale.fit.coxph$var
+
+#test statistic
+t(beta) %*% ginv(submatrix) %*% beta
+
+1-pchisq(58.20651,df=6)
+```
+```{r}
+whale.fit.species<-coxph(Surv(age, delta) ~ species, data=whales)
+
+```
+
+
+```{r}
+anova(whale.fit.species,whale.fit.coxph)
+```
+
+
+```{r}
+orcas <- whales[whales$species %in% c("Killer Whale; Orca"), ]
+orcas <- orcas[, c("ch", "sex")]
+orcas$sex<-as.factor(orcas$sex)
+cjs.m1 <- crm(orcas)
+cjs.m1 <- cjs.hessian(cjs.m1)
+cjs.m1
+plogis(cjs.m1$results$beta$Phi)
+
+```
+
+```{r}
+survival_rate_group1 <- 0.954
+sample_size_group1 <- 66
+
+survival_rate_group2 <- 0.935
+sample_size_group2 <- 181
+
+events_group1 <- round(survival_rate_group1 * sample_size_group1)
+events_group2 <- round(survival_rate_group2 * sample_size_group2)
+
+data_matrix <- matrix(c(events_group1, sample_size_group1 - events_group1,
+                        events_group2, sample_size_group2 - events_group2),
+                      nrow = 2, byrow = TRUE)
+
+chi2_result <- chisq.test(data_matrix)
+
+chi2_result
+```
+0.7597
+
+```{r}
+Beluga <- whales[whales$species %in% c("Beluga"), ]
+Beluga <- Beluga[, c("ch", "sex")]
+Beluga$sex<-as.factor(Beluga$sex)
+cjs.m1 <- crm(Beluga)
+cjs.m1 <- cjs.hessian(cjs.m1)
+cjs.m1
+plogis(cjs.m1$results$beta$Phi)
+
+```
+
+```{r}
+mh <- whales[whales$species %in% c("Melon-Headed Whale"), ]
+mh <- mh[, c("ch", "sex")]
+mh$sex<-as.factor(mh$sex)
+cjs.m1 <- crm(mh)
+cjs.m1 <- cjs.hessian(cjs.m1)
+cjs.m1
+plogis(cjs.m1$results$beta$Phi)
+
+```
+
+```{r}
+pilot <- whales[whales$species %in% c("Pilot Whale"), ]
+pilot <- pilot[, c("ch", "sex")]
+pilot$sex<-as.factor(pilot$sex)
+cjs.m1 <- crm(pilot)
+cjs.m1 <- cjs.hessian(cjs.m1)
+cjs.m1
+plogis(cjs.m1$results$beta$Phi)
+
+```
+
+```{r}
+Right <- whales[whales$species %in% c("Northern Right Whale"), ]
+Right <- Right[, c("ch", "sex")]
+Right$sex<-as.factor(Right$sex)
+#cjs.m1 <- crm(Right)
+#cjs.m1 <- cjs.hessian(cjs.m1)
+#cjs.m1
+#plogis(cjs.m1$results$beta$Phi)
+
+```
